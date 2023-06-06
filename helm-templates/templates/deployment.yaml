@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "(_projectName_).fullname" . }}
+  labels:
+    {{- include "(_projectName_).labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "(_projectName_).selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "(_projectName_).selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "(_projectName_).serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+      - name: logback-mount
+        configMap:
+          name: logback-{{ .Chart.Name }}-configmap
+          defaultMode: 420
+
+      containers:
+        - name: {{ include "(_projectName_).fullname" . }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: IfNotPresent
+          envFrom:
+          - configMapRef:
+              name: {{ .Chart.Name }}-configmap
+          - secretRef:
+              name: {{ .Chart.Name }}-secret
+          volumeMounts:
+          - name: logback-mount
+            mountPath: {{ .Values.mounts.logback }} 
+          {{- if .Values.healthchecks.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthchecks.livenesspath }}
+              port: {{ .Values.healthchecks.livenessport }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthchecks.readinesspath }}
+              port: {{ .Values.healthchecks.readinessport }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

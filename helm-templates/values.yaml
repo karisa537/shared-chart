@@ -1,0 +1,54 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: (_registryUrl_)/(_openshiftProjectName_)/(_projectName_)
+  # Overrides the image tag whose default is the chart appVersion.
+  tag:  '(_image_tag_)'
+
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+
+
+service:
+  type: ClusterIP
+  port: 80
+  targetport: 8080
+
+ingress:
+  enabled: false
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+healthchecks:
+  enabled: false
+  readinesspath: /actuator/health
+  readinessport: 8080
+  livenesspath: /actuator/health
+  livenessport: 8080
+
+#secrets
+secrets:
+  create: true #false to disable the secret creation
+  data:
+    key1: $value1
+    key2: $value2
+
+
+#configs of Environment Variables
+createConfigMap: true #false to disable the configMap creation
+configs:
+  ENABLE_SSL: "false"
+  AMQ_HOSTNAME: 'amqp://classic-activemq-service-5672.kcb-message-brokers:5672'
+  FFO_REPAYMENT_QUEUE_NAME: KCB.FFO.REPAYMENT.REQ
+  TZ: Africa/Nairobi
+  JDBC_URL: 'jdbc:oracle:thin:@//10.219.2.45:1521/knob12'

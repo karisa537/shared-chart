@@ -1,0 +1,49 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+# variables:
+
+steps:
+- task: CopyFiles@2
+  displayName: 'Copy mvn-build-resources to: $(Build.ArtifactStagingDirectory)/shared-resources'
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)/shared-resources/mvn-build-resources
+    TargetFolder: $(Build.ArtifactStagingDirectory)/shared-resources
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: mvn-build-resources to shared-resources'
+  inputs:
+    PathtoPublish: $(Build.ArtifactStagingDirectory)/shared-resources
+    ArtifactName: shared-resources
+
+- task: CopyFiles@2
+  displayName: 'Copy trivy-resources to: $(Build.ArtifactStagingDirectory)/trivy-resources'
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)/shared-resources/trivy
+    TargetFolder: $(Build.ArtifactStagingDirectory)/trivy-resources
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: trivy-resources'
+  inputs:
+    PathtoPublish: $(Build.ArtifactStagingDirectory)/trivy-resources
+    ArtifactName: trivy-templates
+
+- task: CopyFiles@2
+  displayName: 'Copy helm-templates to: $(Build.ArtifactStagingDirectory)/helm-templates'
+  inputs:
+    SourceFolder: $(Build.SourcesDirectory)/helm-templates
+    TargetFolder: $(Build.ArtifactStagingDirectory)/helm-templates
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: helm-templates'
+  inputs:
+    PathtoPublish: $(Build.ArtifactStagingDirectory)/helm-templates
+    ArtifactName: helm-templates
